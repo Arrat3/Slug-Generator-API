@@ -11,9 +11,20 @@ export class SlugService {
     this.nextId++;
   }
 
+  doesSlugExist(slug: string): boolean {
+    return !!this.slugs.find((item) => item.slug === slug);
+  }
+
+  ensureNotEmptySlug(original: string): void {
+    if (original.trim() === '') {
+      throw new BadRequestException('Original string cannot be empty');
+    }
+  }
+
   createNewSlug(original: string): Slug {
+    this.ensureNotEmptySlug(original);
     const newSlugy = slugify(original);
-    if (this.slugs.find((item) => item.slug === newSlugy)) {
+    if (this.doesSlugExist(newSlugy)) {
       throw new BadRequestException('Slug already exists');
     } else {
       const newSlug: Slug = {
@@ -31,37 +42,37 @@ export class SlugService {
     return this.slugs;
   }
 
-  lookForInvalidId(id: number): void {
+  ensureValidId(id: number): void {
     if (id <= 0) {
       throw new BadRequestException('Invalid id');
     }
   }
 
-  lookForValidId(id: number): void {
-    if (this.slugs.findIndex((item) => item.id === id) === -1) {
+  getSlugIndex(id: number): number {
+    const index: number = this.slugs.findIndex((item) => item.id === id);
+    if (index === -1) {
       throw new BadRequestException(`Slug with id ${id} does not exist`);
     }
+    return index;
   }
 
   getById(id: number): Slug {
-    this.lookForInvalidId(id);
-    this.lookForValidId(id);
-    const index = this.slugs.findIndex((item) => item.id === id);
+    this.ensureValidId(id);
+    const index = this.getSlugIndex(id);
     return this.slugs[index];
   }
 
   deleteById(id: number): string {
-    this.lookForInvalidId(id);
-    this.lookForValidId(id);
-    const index = this.slugs.findIndex((item) => item.id === id);
+    this.ensureValidId(id);
+    const index = this.getSlugIndex(id);
     this.slugs.splice(index, 1);
     return `Slug with id ${id} deleted successfully`;
   }
 
   updateById(id: number, original: string): Slug {
-    this.lookForInvalidId(id);
-    this.lookForValidId(id);
-    const index = this.slugs.findIndex((item) => item.id === id);
+    this.ensureNotEmptySlug(original);
+    this.ensureValidId(id);
+    const index: number = this.getSlugIndex(id);
     const newSlug = this.slugs[index];
     newSlug.original = original;
     newSlug.slug = slugify(original);

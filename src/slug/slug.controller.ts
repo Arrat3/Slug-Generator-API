@@ -33,6 +33,6 @@ export class SlugController {
   }
   @Patch(':id')
   update(@Param('id') id: number, @Body('original') original: string) {
-    return this.slugService.updateById(id, original);
+    return this.slugService.updateById(Number(id), original);
   }
 }
