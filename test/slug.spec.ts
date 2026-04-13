@@ -1,34 +1,3 @@
-// import { Test, Testing, TestingModule } from '@nestjs/testing';
-// import { INestApplication } from '@nestjs/common';
-// import { AppModule } from 'src/app.module';
-// import request from 'supertest';
-
-// describe('Slug API (e2e)', () => {
-//   let app: INestApplication;
-//   beforeAll(async () => {
-//     const moduleFixture: TestingModule = await Test.createTestingModule({
-//       imports: [AppModule],
-//     }).compile();
-
-//     app = moduleFixture.createNestApplication();
-//     await app.init();
-//   });
-
-//   afterAll(async () => {
-//     await app.close();
-//   });
-
-//   it('POST /slug → create slug', async () => {
-//     const result = await request(app.getHttpServer())
-//       .post('/slug')
-//       .send({ original: 'Hello World!' });
-
-//     expect(result.status).toBe(201);
-//     expect(result.body).toHaveProperty('id');
-//     expect(result.body.slug).toBe('hello-world');
-//   });
-// });
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
