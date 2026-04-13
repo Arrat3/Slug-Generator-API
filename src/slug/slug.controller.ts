@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { SlugService } from './slug.service';
 
 @Controller('slug')
@@ -22,5 +30,9 @@ export class SlugController {
   @Delete(':id')
   deleteById(@Param('id') id: number) {
     return this.slugService.deleteById(Number(id));
+  }
+  @Patch(':id')
+  update(@Param('id') id: number, @Body('original') original: string) {
+    return this.slugService.updateById(Number(id), original);
   }
 }
