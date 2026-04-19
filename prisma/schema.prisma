@@ -6,3 +6,9 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Slug{
+  id Int @default(autoincrement()) @id
+  originalString String
+  slug String @unique
+}
