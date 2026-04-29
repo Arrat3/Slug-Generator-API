@@ -8,18 +8,6 @@ import { SlugMapper } from './slug.mapper';
 export class SlugService {
   constructor(private readonly slugRepository: SlugRepository) {}
 
-  private mapSlug(record: {
-    id: number;
-    originalString: string;
-    slug: string;
-  }): Slug {
-    return {
-      id: record.id,
-      original: record.originalString,
-      slug: record.slug,
-    };
-  }
-
   ensureNotEmptySlug(original: string): void {
     if (original.trim() === '') {
       throw new BadRequestException('Original string cannot be empty');
