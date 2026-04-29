@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { dataDTO } from '../links/dto/create-link.dto';
 
 @Injectable()
 export class SlugRepository {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: { originalString: string; slug: string }) {
+  async create(data: dataDTO) {
     return this.prisma.slug.create({
       data,
     });
