@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { dataDTO } from '../links/dto/create-link.dto';
+import { dataDTO } from 'src/links/dto/create-link.dto';
 
 @Injectable()
 export class SlugRepository {
@@ -22,9 +22,22 @@ export class SlugRepository {
     });
   }
 
+  async findBySlug(slug: string) {
+    return this.prisma.slug.findUnique({
+      where: { slug },
+    });
+  }
+
   async deleteById(id: number) {
     return this.prisma.slug.delete({
       where: { id },
+    });
+  }
+
+  async updateById(id: number, data: dataDTO) {
+    return this.prisma.slug.update({
+      where: { id },
+      data,
     });
   }
 }

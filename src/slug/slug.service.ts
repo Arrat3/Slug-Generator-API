@@ -1,18 +1,22 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Slug } from './slug.model';
 import { slugify } from 'slug-generator';
+import { SlugRepository } from './slug.repository';
 
 @Injectable()
 export class SlugService {
-  private slugs: Slug[] = [];
-  private nextId: number = 1;
+  constructor(private readonly slugRepository: SlugRepository) {}
 
-  incrementNextId(): void {
-    this.nextId++;
-  }
-
-  doesSlugExist(slug: string): boolean {
-    return !!this.slugs.find((item) => item.slug === slug);
+  private mapSlug(record: {
+    id: number;
+    originalString: string;
+    slug: string;
+  }): Slug {
+    return {
+      id: record.id,
+      original: record.originalString,
+      slug: record.slug,
+    };
   }
 
   ensureNotEmptySlug(original: string): void {
@@ -21,25 +25,32 @@ export class SlugService {
     }
   }
 
-  createNewSlug(original: string): Slug {
-    this.ensureNotEmptySlug(original);
-    const newSlugy = slugify(original);
-    if (this.doesSlugExist(newSlugy)) {
-      throw new BadRequestException('Slug already exists');
-    } else {
-      const newSlug: Slug = {
-        id: this.nextId,
-        original,
-        slug: newSlugy,
-      };
-      this.slugs.push(newSlug);
-      this.incrementNextId();
-      return newSlug;
-    }
+  async ensureExistingSlug(newSlug: string): Promise<boolean> {
+    return (await this.slugRepository.findBySlug(newSlug)) !== null;
   }
 
-  getAllSlugs(): Slug[] {
-    return this.slugs;
+  async createNewSlug(original: string): Promise<Slug> {
+    console.log('Original : ', original);
+    this.ensureNotEmptySlug(original);
+    const newSlugy = slugify(original);
+
+    console.log('New Slug : ', newSlugy);
+
+    if (await this.ensureExistingSlug(newSlugy)) {
+      throw new BadRequestException('Slug already exists');
+    }
+
+    const newSlug = await this.slugRepository.create({
+      originalString: original,
+      slug: newSlugy,
+    });
+
+    return this.mapSlug(newSlug);
+  }
+
+  async getAllSlugs(): Promise<Slug[]> {
+    const slugs = await this.slugRepository.findAll();
+    return slugs.map((slug) => this.mapSlug(slug));
   }
 
   ensureValidId(id: number): void {
@@ -48,35 +59,50 @@ export class SlugService {
     }
   }
 
-  getSlugIndex(id: number): number {
-    const index: number = this.slugs.findIndex((item) => item.id === id);
-    if (index === -1) {
+  async getSlugById(id: number) {
+    const slug = await this.slugRepository.findById(id);
+    if (!slug) {
       throw new BadRequestException(`Slug with id ${id} does not exist`);
     }
-    return index;
+    return slug;
   }
 
-  getById(id: number): Slug {
+  async getById(id: number): Promise<Slug> {
     this.ensureValidId(id);
-    const index = this.getSlugIndex(id);
-    return this.slugs[index];
+    const slug = await this.getSlugById(id);
+    return this.mapSlug(slug);
   }
 
-  deleteById(id: number): string {
+  async deleteById(id: number): Promise<string> {
     this.ensureValidId(id);
-    const index = this.getSlugIndex(id);
-    this.slugs.splice(index, 1);
+    await this.getSlugById(id);
+    await this.slugRepository.deleteById(id);
     return `Slug with id ${id} deleted successfully`;
   }
 
-  updateById(id: number, original: string): Slug {
+  async ensureNotDuplicateSlug(
+    newSlug: string,
+    currentSlugId: number,
+  ): Promise<void> {
+    const duplicateSlug = await this.slugRepository.findBySlug(newSlug);
+    if (duplicateSlug && duplicateSlug.id !== currentSlugId) {
+      throw new BadRequestException('Slug already exists');
+    }
+  }
+
+  async updateById(id: number, original: string): Promise<Slug> {
     this.ensureNotEmptySlug(original);
     this.ensureValidId(id);
-    const index: number = this.getSlugIndex(id);
-    const newSlug = this.slugs[index];
-    newSlug.original = original;
-    newSlug.slug = slugify(original);
-    this.slugs[index] = newSlug;
-    return newSlug;
+
+    const currentSlug = await this.getSlugById(id);
+    const newSlugValue = slugify(original);
+    await this.ensureNotDuplicateSlug(newSlugValue, currentSlug.id);
+
+    const updatedSlug = await this.slugRepository.updateById(id, {
+      originalString: original,
+      slug: newSlugValue,
+    });
+
+    return this.mapSlug(updatedSlug);
   }
 }
