@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Slug } from './slug.model';
 import { slugify } from 'slug-generator';
 import { SlugRepository } from './slug.repository';
+import { SlugMapper } from './slug.mapper';
 
 @Injectable()
 export class SlugService {
@@ -26,11 +27,11 @@ export class SlugService {
   }
 
   async ensureExistingSlug(newSlug: string): Promise<boolean> {
-    return (await this.slugRepository.findBySlug(newSlug)) !== null;
+    const slug = await this.slugRepository.findBySlug(newSlug);
+    return slug !== null;
   }
 
   async createNewSlug(original: string): Promise<Slug> {
-    console.log('Original : ', original);
     this.ensureNotEmptySlug(original);
     const newSlugy = slugify(original);
 
@@ -45,12 +46,12 @@ export class SlugService {
       slug: newSlugy,
     });
 
-    return this.mapSlug(newSlug);
+    return SlugMapper.mapToSlug(newSlug);
   }
 
   async getAllSlugs(): Promise<Slug[]> {
     const slugs = await this.slugRepository.findAll();
-    return slugs.map((slug) => this.mapSlug(slug));
+    return slugs.map(SlugMapper.mapToSlug);
   }
 
   ensureValidId(id: number): void {
@@ -70,7 +71,7 @@ export class SlugService {
   async getById(id: number): Promise<Slug> {
     this.ensureValidId(id);
     const slug = await this.getSlugById(id);
-    return this.mapSlug(slug);
+    return SlugMapper.mapToSlug(slug);
   }
 
   async deleteById(id: number): Promise<string> {
@@ -103,6 +104,6 @@ export class SlugService {
       slug: newSlugValue,
     });
 
-    return this.mapSlug(updatedSlug);
+    return SlugMapper.mapToSlug(updatedSlug);
   }
 }

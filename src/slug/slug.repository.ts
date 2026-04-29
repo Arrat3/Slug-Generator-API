@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { dataDTO } from 'src/links/dto/create-link.dto';
+import { SlugDto } from '../links/dto/slug.dto';
 
 @Injectable()
 export class SlugRepository {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: dataDTO) {
+  async create(data: SlugDto) {
     return this.prisma.slug.create({
       data,
     });
@@ -34,7 +34,7 @@ export class SlugRepository {
     });
   }
 
-  async updateById(id: number, data: dataDTO) {
+  async updateById(id: number, data: SlugDto) {
     return this.prisma.slug.update({
       where: { id },
       data,
